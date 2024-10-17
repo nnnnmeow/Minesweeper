@@ -8,6 +8,9 @@
 #include <windows.h>
 #include <vector>
 #include <ctime>
+#include <string>
+#include <locale>
+#include <codecvt>
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -31,7 +34,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
         L"Saper",
         WS_OVERLAPPED | WS_MINIMIZEBOX | WS_SYSMENU,
 
-        CW_USEDEFAULT, CW_USEDEFAULT, 645, 850,
+        CW_USEDEFAULT, CW_USEDEFAULT, 645, 1000, 
 
         NULL,
         NULL,
@@ -72,11 +75,134 @@ struct cells
 
 std::vector<cells> v;
 
+std::vector<cells> OpenCells(std::vector<cells> &v, int number)
+{
+    for (int i = 0; i < 63; i++)
+    {
+        if (v[i].number == number)
+        {
+            if (v[i].bombsnear == 0)
+            {
+                if (v.size() > i + 1 && v[i + 1].posY == v[i].posY)
+                {
+                    if (v.size() > i + 1 && v[i + 1].isbomb == false)
+                    {
+                        if (v[i + 1].revealed == false)
+                        {
+                            v[i + 1].revealed = true;
+                            if (v[i + 1].bombsnear == 0)
+                            {
+                                OpenCells(v, v[i + 1].number);
+                            }
+                        }
+                    }
+                }
+                if (v.size() > i - 1 && v[i - 1].posY == v[i].posY)
+                {
+                    if (v.size() > i - 1 && v[i - 1].isbomb == false)
+                    {
+                        if (v[i - 1].revealed == false)
+                        {
+                            v[i - 1].revealed = true;
+                            if (v[i - 1].bombsnear == 0)
+                            {
+                                OpenCells(v, v[i - 1].number);
+                            }
+                        }
+                    }
+                }
+                if (v.size() > i + 8 && v[i + 8].posY == v[i + 7].posY)
+                {
+                    if (v.size() > i + 8 && v[i + 8].isbomb == false)
+                    {
+                        if (v[i + 8].revealed == false)
+                        {
+                            v[i + 8].revealed = true;
+                            if (v[i + 8].bombsnear == 0)
+                            {
+                                OpenCells(v, v[i + 8].number);
+                            }
+                        }
+                    }
+                }
+                if (v.size() > i - 8 && v[i - 8].posY == v[i - 7].posY)
+                {
+                    if (v.size() > i - 8 && v[i - 8].isbomb == false)
+                    {
+                        if (v[i - 8].revealed == false)
+                        {
+                            v[i - 8].revealed = true;
+                            if (v[i - 8].bombsnear == 0)
+                            {
+                                OpenCells(v, v[i - 8].number);
+                            }
+                        }
+                    }
+                }
+                if (v.size() > i + 7 && v[i + 6].posY == v[i + 7].posY)
+                {
+                    if (v.size() > i + 6 && v[i + 6].isbomb == false)
+                    {
+                        if (v[i + 6].revealed == false)
+                        {
+                            v[i + 6].revealed = true;
+                            if (v[i + 6].bombsnear == 0)
+                            {
+                                OpenCells(v, v[i + 1].number);
+                            }
+                        }
+                    }
+                }
+                if (v.size() > i - 7 && v[i - 6].posY == v[i - 7].posY)
+                {
+                    if (v.size() > i - 6 && v[i - 6].isbomb == false)
+                    {
+                        if (v[i - 6].revealed == false)
+                        {
+                            v[i - 6].revealed = true;
+                            if (v[i - 6].bombsnear == 0)
+                            {
+                                OpenCells(v, v[i - 6].number);
+                            }
+                        }
+                    }
+                }
+                if (v.size() > i - 7 && v[i - 7].isbomb == false)
+                {
+                    if (v[i - 7].revealed == false)
+                    {
+                        v[i - 7].revealed = true;
+                        if (v[i - 7].bombsnear == 0)
+                        {
+                            OpenCells(v, v[i - 7].number);
+                        }
+                    }
+                }
+                if (v.size() > i + 7 && v[i + 7].isbomb == false)
+                {
+                    if (v[i + 7].revealed == false)
+                    {
+                        v[i + 7].revealed = true;
+                        if (v[i + 7].bombsnear == 0)
+                        {
+                            OpenCells(v, v[i + 7].number);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return v;
+}
+
+
+
 bool drawn = false;
 bool win = false;
 bool lose = false;
 
 int bombs = 0;
+int flags = 20;
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -102,6 +228,18 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         FillRect(hdc, &ps.rcPaint, (HBRUSH)(COLOR_WINDOW + 1));
         if (drawn == true && win == false && lose == false)
         {
+            RECT intflags = { 120, 900, 150, 1000 };
+            RECT textflags = { 80, 880, 110, 980 };
+            Rectangle(hdc, 117, 899, 140, 917);
+            std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+            std::wstring wide = converter.from_bytes("Flags left: ");
+            DrawText(hdc, wide.c_str(), -1, &textflags, DT_SINGLELINE | DT_NOCLIP);
+            DrawText(hdc, std::to_wstring(flags).c_str(), -1, &intflags, DT_SINGLELINE | DT_NOCLIP);
+            RECT gamerest = { 305, 870, 325, 890 };
+            Rectangle(hdc, 300, 865, 330, 895);
+            HBRUSH  hbrush = CreateSolidBrush(RGB(255, 255, 0));
+            FillRect(hdc, &gamerest, (hbrush));
+            DeleteObject(hbrush);
             for (int j = 0; j < 810; j += 90)
             {
                 positionY += 1;
@@ -114,14 +252,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     positionX += 1;
                 }
             }
-            for (size_t i = 0; i < 63; i++)
+            /*for (size_t i = 0; i < 63; i++)
             {
                 RECT rect = { v[i].topX, v[i].topY, v[i].botX, v[i].botY };
                 if (v[i].isbomb == true)
                 {
                     FillRect(hdc, &rect, (HBRUSH)(COLOR_WINDOW + 9));
                 }
-            }
+            }*/
 
             //Draw a color for mines near click
 
@@ -130,7 +268,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 RECT rect = { v[i].topX, v[i].topY, v[i].botX, v[i].botY };
                 if (v[i].revealed == true)
                 {
-                    if (v[i].bombsnear == 1)
+                    if (v[i].bombsnear == 0)
+                    {
+                        HBRUSH  hbrush = CreateSolidBrush(RGB(192, 192, 192));
+                        FillRect(hdc, &rect, (hbrush));
+                        DeleteObject(hbrush);
+                    }
+                    else if (v[i].bombsnear == 1)
                     {
                         HBRUSH  hbrush = CreateSolidBrush(RGB(55, 38, 255));
                         FillRect(hdc, &rect, (hbrush));
@@ -178,12 +322,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                         FillRect(hdc, &rect, (hbrush));
                         DeleteObject(hbrush);
                     }
-                    else if (v[i].bombsnear == 9)
-                    {
-                        HBRUSH  hbrush = CreateSolidBrush(RGB(210, 70, 187));
-                        FillRect(hdc, &rect, (hbrush));
-                        DeleteObject(hbrush);
-                    }
                 }
             }
 
@@ -204,8 +342,20 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         //draw cells
 
-        else if (lose == false && win == false)
+        else if (drawn == false && lose == false && win == false)
         {
+            RECT intflags = { 120, 880, 150, 980 };
+            RECT textflags = { 60, 860, 110, 960 };
+            Rectangle(hdc, 117, 879, 140, 897);
+            std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+            std::wstring wide = converter.from_bytes("Flags left: ");
+            DrawText(hdc, wide.c_str(), -1, &textflags, DT_SINGLELINE | DT_NOCLIP);
+            DrawText(hdc, std::to_wstring(flags).c_str(), -1, &intflags, DT_SINGLELINE | DT_NOCLIP);
+            RECT gamerest = { 305, 870, 325, 890 };
+            Rectangle(hdc, 300, 865, 330, 895);
+            HBRUSH  hbrush = CreateSolidBrush(RGB(255, 255, 0));
+            FillRect(hdc, &gamerest, (hbrush));
+            DeleteObject(hbrush);
             for (int j = 0; j < 810; j += 90)
             {
                 positionY += 1;
@@ -224,39 +374,62 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 randbomb = rand() % 63;
                 if (v[randbomb].isbomb == true)
                 {
-                    while (v[randbomb].isbomb != false)
+                    while (v[randbomb].isbomb == true)
                     {
                         randbomb = rand() % 63;
                     }
                 }
-                else
-                {
-                    v[randbomb].isbomb = true;
-                    bombs++;
-                }
-                RECT rect = { v[randbomb].topX, v[randbomb].topY, v[randbomb].botX, v[randbomb].botY };
-                FillRect(hdc, &rect, (HBRUSH)(COLOR_WINDOW + 9));
+                v[randbomb].isbomb = true;
+                bombs++;
+                /*RECT rect = { v[randbomb].topX, v[randbomb].topY, v[randbomb].botX, v[randbomb].botY };
+                FillRect(hdc, &rect, (HBRUSH)(COLOR_WINDOW + 9));*/
             }
             
             //calculate amount of bombs near cell
 
             for (int i = 0; i < 63; i++)
             {
-                if (v.size() > i + 1 && v[i + 1].isbomb == true)
+                if (v.size() > i + 1 && v[i + 1].posY == v[i].posY)
                 {
-                    v[i].bombsnear += 1;
+                    if (v.size() > i + 1 && v[i + 1].isbomb == true)
+                    {
+                        v[i].bombsnear += 1;
+                    }
                 }
-                if (v.size() > i - 1 && v[i - 1].isbomb == true)
+                if (v.size() > i - 1 && v[i - 1].posY == v[i].posY)
                 {
-                    v[i].bombsnear += 1;
+                    if (v.size() > i - 1 && v[i - 1].isbomb == true)
+                    {
+                        v[i].bombsnear += 1;
+                    }
                 }
-                if (v.size() > i - 6 && v[i - 6].isbomb == true)
+                if (v.size() > i + 8 && v[i + 8].posY == v[i + 7].posY)
                 {
-                    v[i].bombsnear += 1;
+                    if (v.size() > i + 8 && v[i + 8].isbomb == true)
+                    {
+                        v[i].bombsnear += 1;
+                    }
                 }
-                if (v.size() > i + 6 && v[i + 6].isbomb == true)
+                if (v.size() > i - 8 && v[i - 8].posY == v[i - 7].posY)
                 {
-                    v[i].bombsnear += 1;
+                    if (v.size() > i - 8 && v[i - 8].isbomb == true)
+                    {
+                        v[i].bombsnear += 1;
+                    }
+                }
+                if (v.size() > i + 7 && v[i + 6].posY == v[i + 7].posY)
+                {
+                    if (v.size() > i + 6 && v[i + 6].isbomb == true)
+                    {
+                        v[i].bombsnear += 1;
+                    }
+                }
+                if (v.size() > i - 7 && v[i - 6].posY == v[i - 7].posY)
+                {
+                    if (v.size() > i - 6 && v[i - 6].isbomb == true)
+                    {
+                        v[i].bombsnear += 1;
+                    }
                 }
                 if (v.size() > i - 7 && v[i - 7].isbomb == true)
                 {
@@ -266,14 +439,134 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 {
                     v[i].bombsnear += 1;
                 }
-                if (v.size() > i - 8 && v[i - 8].isbomb == true)
+            }
+
+        }
+
+        else if (win == true)
+        {
+            for (int j = 0; j < 810; j += 90)
+            {
+                for (int i = 0; i < 630; i += 90)
                 {
-                    v[i].bombsnear += 1;
+                    Rectangle(hdc, i, j, i + 90, j + 90);
                 }
-                if (v.size() > i + 8 && v[i + 8].isbomb == true)
+            }
+            RECT gamerest = { 305, 870, 325, 890 };
+            Rectangle(hdc, 300, 865, 330, 895);
+            HBRUSH  hbrush = CreateSolidBrush(RGB(255, 255, 0));
+            FillRect(hdc, &gamerest, (hbrush));
+            DeleteObject(hbrush);
+            for (int i = 0; i < 63; i++)
+            {
+                RECT rect = { v[i].topX, v[i].topY, v[i].botX, v[i].botY };
+                HBRUSH  hbrush = CreateSolidBrush(RGB(0, 255, 0));
+                FillRect(hdc, &rect, (hbrush));
+                Sleep(10);
+            }
+            for (int i = 0; i < 63; i++)
+            {
+                RECT rect = { v[i].topX, v[i].topY, v[i].botX, v[i].botY };
+                HBRUSH  hbrush = CreateSolidBrush(RGB(255, 255, 255));
+                FillRect(hdc, &rect, (hbrush));
+            }
+            Sleep(200);
+            for (int i = 0; i < 63; i++)
+            {
+                RECT rect = { v[i].topX, v[i].topY, v[i].botX, v[i].botY };
+                HBRUSH  hbrush = CreateSolidBrush(RGB(0, 255, 0));
+                FillRect(hdc, &rect, (hbrush));
+            }
+            Sleep(200);
+            for (int i = 0; i < 63; i++)
+            {
+                RECT rect = { v[i].topX, v[i].topY, v[i].botX, v[i].botY };
+                HBRUSH  hbrush = CreateSolidBrush(RGB(255, 255, 255));
+                FillRect(hdc, &rect, (hbrush));
+            }
+            Sleep(200);
+            for (int i = 0; i < 63; i++)
+            {
+                RECT rect = { v[i].topX, v[i].topY, v[i].botX, v[i].botY };
+                HBRUSH  hbrush = CreateSolidBrush(RGB(0, 255, 0));
+                FillRect(hdc, &rect, (hbrush));
+            }
+            Sleep(200);
+            for (int i = 0; i < 63; i++)
+            {
+                RECT rect = { v[i].topX, v[i].topY, v[i].botX, v[i].botY };
+                HBRUSH  hbrush = CreateSolidBrush(RGB(255, 255, 255));
+                FillRect(hdc, &rect, (hbrush));
+            }
+            Sleep(200);
+            for (int i = 0; i < 63; i++)
+            {
+                RECT rect = { v[i].topX, v[i].topY, v[i].botX, v[i].botY };
+                HBRUSH  hbrush = CreateSolidBrush(RGB(0, 255, 0));
+                FillRect(hdc, &rect, (hbrush));
+            }
+        }
+        else if (lose = true)
+        {
+            for (int j = 0; j < 810; j += 90)
+            {
+                for (int i = 0; i < 630; i += 90)
                 {
-                    v[i].bombsnear += 1;
+                    Rectangle(hdc, i, j, i + 90, j + 90);
                 }
+            }
+            RECT gamerest = { 305, 870, 325, 890 };
+            Rectangle(hdc, 300, 865, 330, 895);
+            HBRUSH  hbrush = CreateSolidBrush(RGB(255, 255, 0));
+            FillRect(hdc, &gamerest, (hbrush));
+            DeleteObject(hbrush);
+            for (int i = 0; i < 63; i++)
+            {
+                RECT rect = { v[i].topX, v[i].topY, v[i].botX, v[i].botY };
+                HBRUSH  hbrush = CreateSolidBrush(RGB(255, 0, 0));
+                FillRect(hdc, &rect, (hbrush));
+                Sleep(10);
+            }
+            for (int i = 0; i < 63; i++)
+            {
+                RECT rect = { v[i].topX, v[i].topY, v[i].botX, v[i].botY };
+                HBRUSH  hbrush = CreateSolidBrush(RGB(255, 255, 255));
+                FillRect(hdc, &rect, (hbrush));
+            }
+            Sleep(200);
+            for (int i = 0; i < 63; i++)
+            {
+                RECT rect = { v[i].topX, v[i].topY, v[i].botX, v[i].botY };
+                HBRUSH  hbrush = CreateSolidBrush(RGB(255, 0, 0));
+                FillRect(hdc, &rect, (hbrush));
+            }
+            Sleep(200);
+            for (int i = 0; i < 63; i++)
+            {
+                RECT rect = { v[i].topX, v[i].topY, v[i].botX, v[i].botY };
+                HBRUSH  hbrush = CreateSolidBrush(RGB(255, 255, 255));
+                FillRect(hdc, &rect, (hbrush));
+            }
+            Sleep(200);
+            for (int i = 0; i < 63; i++)
+            {
+                RECT rect = { v[i].topX, v[i].topY, v[i].botX, v[i].botY };
+                HBRUSH  hbrush = CreateSolidBrush(RGB(255, 0, 0));
+                FillRect(hdc, &rect, (hbrush));
+            }
+            Sleep(200);
+            for (int i = 0; i < 63; i++)
+            {
+                RECT rect = { v[i].topX, v[i].topY, v[i].botX, v[i].botY };
+                HBRUSH  hbrush = CreateSolidBrush(RGB(255, 255, 255));
+                FillRect(hdc, &rect, (hbrush));
+            }
+            Sleep(200);
+            for (int i = 0; i < 63; i++)
+            {
+                RECT rect = { v[i].topX, v[i].topY, v[i].botX, v[i].botY };
+                HBRUSH  hbrush = CreateSolidBrush(RGB(255, 0, 0));
+                FillRect(hdc, &rect, (hbrush));
             }
         }
         
@@ -286,10 +579,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         POINT pt;
         pt.x = GET_X_LPARAM(lParam);
         pt.y = GET_Y_LPARAM(lParam);
-        AllocConsole();
+        /*AllocConsole();
         freopen_s((FILE**)stdout, "CONOUT$", "w", stdout);
-        std::cout << "X:" << " " << pt.x << " " << "Y:" << " " << pt.y << std::endl;
+        std::cout << "X:" << " " << pt.x << " " << "Y:" << " " << pt.y << std::endl;*/
         //find click coordinates
+        int l = 0;
         for (int i = 0; i < 63; i++)
         {
 
@@ -297,12 +591,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             {
                 if (v.size() > i && pt.x >= v[i].topX && pt.x <= v[i].botX)
                 {
-                    std::cout << "chosen " << v[i].number << std::endl;
+                    OpenCells(v, v[i].number);
+                    /*std::cout << "chosen " << v[i].number << std::endl;
                     std::cout << "bombs " << bombs << std::endl;
+                    std::cout << "Flags: " << flags << std::endl;*/
                     //if already flaged -> unflag
                     if (v[i].flaged == true)
                     {
                         v[i].flaged = false;
+                        flags++;
                         if (v[i].isbomb == true)
                         {
                             bombs++;
@@ -324,6 +621,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 win = true;
             }
         }
+        if (300 < pt.x && pt.x < 330 && 865 < pt.y && pt.y < 895)
+        {
+            drawn = false;
+            bombs = 0;
+            v.clear();
+            win = false;
+            lose = false;
+        }
         InvalidateRect(hwnd, NULL, false);
     break;
     }
@@ -333,10 +638,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         POINT pt;
         pt.x = GET_X_LPARAM(lParam);
         pt.y = GET_Y_LPARAM(lParam);
-        AllocConsole();
+        /*AllocConsole();
         freopen_s((FILE**)stdout, "CONOUT$", "w", stdout);
-        std::cout << "X:" << " " << pt.x << " " << "Y:" << " " << pt.y << std::endl;
+        std::cout << "X:" << " " << pt.x << " " << "Y:" << " " << pt.y << std::endl;*/
         //find click coordinates
+        
         for (int i = 0; i < 63; i++)
         {
 
@@ -349,6 +655,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     if (v[i].flaged == true)
                     {
                         v[i].flaged = false;
+                        flags++;
                         if (v[i].isbomb == true)
                         {
                             bombs++;
@@ -361,10 +668,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                         {
                             v[i].flaged = true;
                             bombs--;
+                            flags--;
                         }
                         else
                         {
                             v[i].flaged = true;
+                            flags--;
                         }
                     }
                     //win
