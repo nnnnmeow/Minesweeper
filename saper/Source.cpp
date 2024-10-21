@@ -766,13 +766,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     else
                     {
                         //flag
-                        if (v[i].BombCheck() == true)
+                        if (v[i].BombCheck() == true && flags > 0)
                         {
                             v[i].SetFlagged(true);
                             bombs--;
                             flags--;
                         }
-                        else
+                        else if(flags > 0)
                         {
                             v[i].SetFlagged(true);
                             flags--;
